@@ -1,0 +1,2070 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>IA - Powered by AI</title>
+  <style>
+    /* Update existing styles with full screen layout */
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #ffffff;
+      height: 100vh; /* Use viewport height */
+      color: #343541;
+      overflow: hidden; /* Prevent scrolling on body */
+      position: fixed; /* Fix position */
+      width: 100%; /* Full width */
+      top: 0;
+      left: 0;
+    }
+
+    #chat-container {
+      max-width: 100%; /* Remove max-width limit */
+      margin: 0;
+      height: 100vh; /* Use viewport height */
+      display: flex;
+      flex-direction: column;
+      padding: 0; /* Remove padding */
+      position: fixed; /* Fix position */
+      width: 100%; /* Full width */
+      top: 0;
+      left: 0;
+    }
+
+    #chat-header {
+      background-color: #ffffff;
+      color: #343541;
+      /* Make header more compact on mobile */
+      padding: 15px; /* Increased from 10px */
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e5e5e5;
+      flex-wrap: wrap;
+    }
+
+    #chat-header h1 {
+      margin: 0;
+      font-size: clamp(20px, 5vw, 24px); /* Increased from 16px/18px */
+      animation: slideInTitle 1s ease-out 0.3s backwards;
+    }
+
+    #chat-header small {
+      font-size: clamp(14px, 4vw, 16px); /* Updated size range */
+      animation: slideInTitle 1s ease-out 0.5s backwards;
+    }
+
+    .animated-logo {
+      width: 50px; /* Increased from 40px */
+      height: 50px; /* Increased from 40px */
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+      background: linear-gradient(-45deg, #9e9e9e, #bdbdbd, #e0e0e0, #9e9e9e);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite, slideInLogo 1s ease-out;
+    }
+
+    .animated-logo svg {
+      width: 30px; /* Increased from 24px */
+      height: 30px; /* Increased from 24px */
+      fill: #ffffff;
+    }
+
+    #chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 10px 70px 10px; /* Add bottom padding to prevent overlap */
+      background-color: #ffffff;
+      height: calc(100vh - 140px); /* Adjust height accounting for header and input */ 
+      margin-bottom: 60px; /* Add margin to prevent overlap with input */
+    }
+
+    .message {
+      position: relative; 
+      max-width: 80%; /* Prevent messages from touching edges */
+      margin: 10px auto 20px;
+      padding: 12px 20px; /* Reduced padding */
+      line-height: 1.5;
+      animation: fadeIn 0.3s ease-out;
+      border-radius: 20px; /* Increased border-radius for bubble look */
+      word-break: break-word; /* Prevent text overflow */
+      clear: both; /* Prevent floating issues */
+    }
+
+    .user-message {
+      background-color: #e0e0e0; /* Changed from DCF8C6 (green) to light gray */
+      border: none; /* Remove border */
+      align-self: flex-end; /* Align to the right */
+      float: right; /* Ensure correct alignment */
+      margin-left: auto; /* Push to the right */
+    }
+
+    .ai-message {
+      background-color: #FFFFFF; /* WhatsApp-like AI bubble color */
+      border: 1px solid #e5e5e5; /* Add a border */
+      align-self: flex-start; /* Align to the left */
+      float: left; /* Ensure correct alignment */
+      margin-right: auto; /* Push to the left */
+    }
+
+    #chat-input {
+      padding: 10px;
+      background-color: #ffffff;
+      border-top: 1px solid #e5e5e5;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      left: 0;
+      z-index: 100; /* Ensure input stays above messages */
+    }
+
+    /* Updated input container styles */
+    .input-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: #ffffff;
+      border-radius: 25px;
+      padding: 8px 15px;
+      border: 1px solid #e5e5e5;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin: 0 10px;
+      max-width: calc(100% - 40px); /* Account for margins */
+    }
+
+    #user-input {
+      flex: 1;
+      border: none;
+      background-color: transparent;
+      color: #343541;
+      padding: 12px;
+      font-size: clamp(14px, 3.5vw, 16px);
+      outline: none;
+      line-height: 1.4;
+    }
+
+    #send-button {
+      background: linear-gradient(-45deg, #9e9e9e, #bdbdbd, #e0e0e0, #9e9e9e);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    #send-button svg {
+      width: 20px;
+      height: 20px;
+      fill: #ffffff;
+    }
+
+    #send-button:hover {
+      transform: scale(1.05);
+    }
+
+    /* Dark mode updates for send button */
+    body.dark-mode #send-button {
+      background: linear-gradient(-45deg, #9e9e9e, #bdbdbd, #e0e0e0, #9e9e9e);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+    }
+
+    body.dark-mode #send-button svg {
+      fill: #ffffff;
+    }
+
+    body.dark-mode #send-button:hover {
+      transform: scale(1.05);
+    }
+
+    /* Dark mode styles */
+    body.dark-mode {
+      background-color: #343541;
+      color: #fff;
+    }
+
+    body.dark-mode #chat-header {
+      background-color: #343541;
+      color: #fff;
+      border-bottom: 1px solid #4a4b53;
+    }
+
+    body.dark-mode #chat-messages {
+      background-color: #343541;
+    }
+
+    body.dark-mode .user-message {
+      background-color: #444654;
+      border: none;
+    }
+
+    body.dark-mode .ai-message {
+      background-color: #3e3f4b;
+      border: none;
+    }
+
+    body.dark-mode #chat-input {
+      background-color: #343541;
+      border-top: 1px solid #4a4b53;
+    }
+
+    body.dark-mode .input-container {
+      background: #40414f;
+      border: 1px solid #4a4b53;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    body.dark-mode #user-input {
+      color: #fff;
+    }
+
+    body.dark-mode #send-button {
+      background: linear-gradient(-45deg, #9e9e9e, #bdbdbd, #e0e0e0, #9e9e9e);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+    }
+
+    body.dark-mode #send-button:hover {
+      transform: scale(1.05);
+    }
+
+    /* Update the search result styles with gradients and source info */
+    .search-result {
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 0.9em;
+      background: linear-gradient(-45deg, #f5f5f5, #e0e0e0, #f5f5f5, #e0e0e0);
+      background-size: 400% 400%;
+      animation: searchGradient 15s ease infinite;
+    }
+
+    .search-source {
+      display: block;
+      margin-top: 8px;
+      font-size: 0.85em;
+      font-style: italic;
+      color: #666;
+    }
+
+    /* Dark mode search result style */
+    body.dark-mode .search-result {
+      background: linear-gradient(-45deg, #3d3d3d, #4d4d4d, #3d3d3d, #4d4d4d);
+      background-size: 400% 400%;
+      color: #fff;
+    }
+
+    body.dark-mode .search-source {
+      color: #aaa;
+    }
+
+    /* Add support for different scripts/fonts */
+    @font-face {
+      font-family: 'Noto Sans';
+      src: url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500&display=swap');
+    }
+
+    @font-face {
+      font-family: 'Noto Sans SC';
+      src: url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500&display=swap');
+    }
+
+    @font-face {
+      font-family: 'Noto Sans JP';
+      src: url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&display=swap');  
+    }
+
+    @font-face {
+      font-family: 'Noto Sans KR';
+      src: url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500&display=swap');
+    }
+
+    @font-face {
+      font-family: 'Noto Sans Arabic';
+      src: url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500&display=swap');
+    }
+
+    /* Language-specific font classes */
+    .lang-zh {
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+
+    .lang-ja {
+      font-family: 'Noto Sans JP', sans-serif;  
+    }
+
+    .lang-ko {
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    .lang-ar {
+      font-family: 'Noto Sans Arabic', sans-serif;
+      direction: rtl;
+    }
+
+    /* RTL layout support */
+    body.rtl #chat-header,
+    body.rtl #chat-messages,
+    body.rtl #chat-input,
+    body.rtl .input-container {
+      direction: rtl;
+    }
+
+    body.rtl #settings-button, 
+    body.rtl #search-toggle {
+      margin-left: 0;
+      margin-right: 10px;
+    }
+
+    /* Update typing indicator styles to use progress bar */
+    #typing-indicator {
+      display: none;
+      width: 80%;
+      max-width: 300px;
+      height: 4px;
+      background: #f0f0f0;
+      border-radius: 8px;
+      margin: 10px auto;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #typing-indicator::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(-45deg, #9e9e9e, #bdbdbd, #e0e0e0, #9e9e9e);
+      background-size: 200% 200%;
+      animation: gradientProgress 2s ease infinite, loading 1.5s ease-in-out infinite;
+      transform-origin: left;
+    }
+
+    @keyframes gradientProgress {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    @keyframes loading {
+      0% {
+        transform: translateX(-100%);
+      }
+      100% {
+        transform: translateX(100%);
+      }
+    }
+
+    /* Remove old typing dots styles */
+    .typing-dot {
+      display: none;
+    }
+
+    /* Keep other existing styles... */
+    .animated-logo {
+      width: 50px; /* Increased from 40px */
+      height: 50px; /* Increased from 40px */
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+      background: linear-gradient(-45deg, #9e9e9e, #bdbdbd, #e0e0e0, #9e9e9e);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite, slideInLogo 1s ease-out;
+    }
+
+    @keyframes gradient {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    @keyframes slideInLogo {
+      0% {
+        transform: translateX(-100px);
+        opacity: 0;
+      }
+      100% {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideInTitle {
+      0% {
+        transform: translateX(-50px);
+        opacity: 0;
+      }
+      100% {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    #chat-header img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    #chat-header h1 {
+      margin: 0;
+      font-size: clamp(20px, 5vw, 24px); /* Increased from 16px/18px */
+      animation: slideInTitle 1s ease-out 0.3s backwards;
+    }
+
+    #chat-header small {
+      color: #8e8ea0;
+      font-size: clamp(14px, 4vw, 16px); /* Updated size range */
+      animation: slideInTitle 1s ease-out 0.5s backwards;
+    }
+
+    #settings-button, #search-toggle {
+      background: none;
+      border: none;
+      color: #8e8ea0;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+
+    #settings-button:hover, #search-toggle:hover {
+      background-color: #2a2b32;
+    }
+
+    #send-button, #search-button {
+      background-color: transparent;
+      border: 1px solid #4a4b53;
+      color: #8e8ea0;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    #send-button:hover, #search-button:hover {
+      background-color: #40414f;
+    }
+
+    #send-button svg, #search-button svg {
+      width: 20px;
+      height: 20px;
+      fill: #8e8ea0;
+    }
+
+    /* Updated modal styles */
+    #settings-modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+    }
+
+    .modal-content {
+      background-color: #ffffff;
+      margin: 5vh auto;
+      padding: 15px;
+      border-radius: 15px;
+      width: 95%;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      animation: modalFadeIn 0.3s ease-out;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+
+    /* Dark mode updates */
+    body.dark-mode .modal-content {
+      background-color: #343541;
+      border: 1px solid #4a4b53;
+    }
+
+    /* Updated modal animation */
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      justify-content: center;
+      border-bottom: 1px solid #4a4b53;
+      padding-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .tab-button {
+      background: none;
+      border: none;
+      color: #8e8ea0;
+      padding: 12px 24px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: clamp(12px, 3.5vw, 16px);
+      transition: all 0.3s ease;
+    }
+
+    .tab-button.active {
+      background-color: #40414f;
+      color: #fff;
+      transform: translateY(1px);
+    }
+
+    .tab-content {
+      display: none;
+      padding: 20px 0;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    button#save-instructions,
+    button#clear-memory {
+      background-color: #40414f;
+      color: #fff;
+      border: 1px solid #4a4b53;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      margin: 10px auto;
+      display: block;
+    }
+
+    button#save-instructions:hover,
+    button#clear-memory:hover {
+      background-color: #2a2b32;
+      transform: translateY(-1px);
+    }
+
+    #appearance-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .typing-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #8e8ea0;
+      margin-right: 4px;
+      animation: typingAnimation 1.4s infinite ease-in-out both;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes typingAnimation {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+
+    @keyframes searchGradient {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message-controls {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 2;
+    }
+
+    .speech-button,
+    .copy-button {
+      background: linear-gradient(-45deg, #9e9e9e, #bdbdbd, #e0e0e0, #9e9e9e);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      opacity: 0.8;
+    }
+
+    .speech-button:hover,
+    .copy-button:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    .speech-button svg,
+    .copy-button svg {
+      width: 16px;
+      height: 16px;
+      fill: white;
+    }
+
+    .message:hover .message-controls {
+      opacity: 1;
+    }
+
+    .message-controls.fade-out {
+      animation: fadeOutControls 1s ease forwards;
+    }
+
+    @keyframes fadeOutControls {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
+    .copy-feedback {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      right: -120px;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .copy-feedback.show {
+      opacity: 1;
+    }
+
+    /* Small screen optimizations */
+    @media screen and (max-width: 320px) {
+      #chat-header h1 {
+        font-size: 14px;
+      }
+
+      #chat-header small {
+        font-size: 10px; /* Smaller size for very narrow screens */
+      }
+
+      .message {
+        padding: 10px;
+        margin: 5px;
+      }
+
+      .input-container {
+        padding: 5px 10px;
+      }
+    }
+
+    /* Ultra-wide screen support */
+    @media screen and (min-width: 2000px) {
+      #chat-container {
+        max-width: 100%;
+      }
+
+      .message {
+        max-width: 95%;
+      }
+    }
+
+    /* Orientation changes */
+    @media screen and (orientation: landscape) and (max-height: 500px) {
+      #chat-messages {
+        height: calc(100vh - 120px);
+        padding-bottom: 60px;
+      }
+
+      #chat-header {
+        padding: 5px;
+      }
+
+      .message {
+        padding: 10px;
+        margin: 5px;
+      }
+
+      #chat-input {
+        padding: 5px;
+      }
+    }
+
+    /* Language selector responsive */
+    #language-select {
+      width: 90%;
+      max-width: 200px;
+      font-size: clamp(14px, 3.5vw, 16px);
+    }
+
+    /* Add new progress bar styles */
+    .progress-container {
+      display: none;
+      width: 80%;
+      max-width: 300px;
+      height: 6px;
+      background: #f0f0f0;
+      border-radius: 8px;
+      margin: 10px auto;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+      background: linear-gradient(-45deg, #9e9e9e, #bdbdbd, #e0e0e0, #9e9e9e);
+      background-size: 200% 200%;
+      animation: gradientProgress 2s ease infinite, loading 1.5s ease-in-out infinite;
+    }
+
+    /* History modal styles */
+    #history-modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+    }
+
+    #history-container {
+      max-height: 60vh;
+      overflow-y: auto;
+      margin: 15px 0;
+      border-radius: 8px;
+      border: 1px solid #e5e5e5;
+      padding: 10px;
+    }
+
+    .history-item {
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      position: relative;
+    }
+
+    .history-item:hover {
+      background-color: #f5f5f5;
+    }
+    
+    body.dark-mode .history-item:hover {
+      background-color: #40414f;
+    }
+
+    .history-item-date {
+      font-size: 0.8em;
+      color: #8e8ea0;
+      margin-bottom: 5px;
+    }
+
+    .history-item-preview {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 0.9em;
+    }
+
+    .history-filter {
+      margin-bottom: 15px;
+    }
+
+    #history-search {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #e5e5e5;
+      background-color: #ffffff;
+      color: #343541;
+    }
+
+    body.dark-mode #history-search {
+      background-color: #40414f;
+      border: 1px solid #4a4b53;
+      color: #ffffff;
+    }
+
+    .history-controls {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .history-controls button {
+      background-color: #40414f;
+      color: #fff;
+      border: 1px solid #4a4b53;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    .history-controls button:hover {
+      background-color: #2a2b32;
+      transform: translateY(-1px);
+    }
+
+    .close-history {
+      color: #8e8ea0;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .close-history:hover {
+      color: #ffffff;
+    }
+    
+    #history-button {
+      background: none;
+      border: none;
+      color: #8e8ea0;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+      margin-left: 5px;
+    }
+
+    #history-button:hover {
+      background-color: #2a2b32;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <div id="chat-header">
+      <div style="display: flex; align-items: center;">
+        <div class="animated-logo" style="cursor: pointer;">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+            <path d="M12 2L2 12L12 22L22 12L12 2zM12 4.83L19.17 12L12 19.17L4.83 12L12 4.83z"/>
+            <path d="M12 12L4.83 12L12 19.17L19.17 12L12 12z"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Jhe</h1>
+          <small>Tesis 2025</small>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center;">
+        <button id="save-button" title="Guardar conversación">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+          </svg>
+        </button>
+        <button id="settings-button">⚙️</button>
+        <button id="history-button" title="Historial de chat">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div id="typing-indicator"></div>
+    <div id="chat-messages"></div>
+    <div id="chat-input">
+      <div class="input-container">
+        <label for="image-upload" class="image-upload-label">
+          <svg viewBox="0 0 24 24" width="24" height="24">
+            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+          </svg>
+        </label>
+        <input type="file" id="image-upload" accept="image/*" style="display: none;">
+        <input type="text" id="user-input" placeholder="Escribe un mensaje o pregunta">
+        <button id="send-button">
+          <svg viewBox="0 0 24 24">
+            <path d="M1.101 21.757 23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <button id="scroll-bottom">
+    <svg viewBox="0 0 24 24">
+      <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/>
+    </svg>
+  </button>
+  <div id="welcome-popup" style="display: none;">
+    <div class="popup-content">
+      <button class="close-popup">×</button>
+      <div class="popup-header">
+        <div class="animated-logo popup-logo">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+            <path d="M12 2L2 12L12 22L22 12L12 2zM12 4.83L19.17 12L12 19.17L4.83 12L12 4.83z"/>
+            <path d="M12 12L4.83 12L12 19.17L19.17 12L12 12z"/>
+          </svg>
+        </div>
+        <h2>Bienvenido a Jhe</h2>
+      </div>
+      <div class="popup-benefits">
+        <h3>¿Por qué usar Jhe?</h3>
+        <ul>
+          <li>Asistente oficial de Tesis 2025</li>
+          <li>Genera imágenes con IA</li>
+          <li>Analizamos imágenes</li>
+          <li>Soporte para múltiples idiomas</li>
+          <li>Acceso a información actualizada</li>
+          <li>Respuestas precisas y personalizadas</li>
+          <li>Conocimiento experto sobre inteligencia artificial</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <button id="scroll-bottom">
+    <svg viewBox="0 0 24 24">
+      <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/>
+    </svg>
+  </button>
+
+  <div id="settings-modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <div class="tabs">
+        <button class="tab-button active" data-tab="instructions">Instrucciones</button>
+        <button class="tab-button" data-tab="memory">Memoria</button>
+        <button class="tab-button" data-tab="appearance">Apariencia</button>
+        <button class="tab-button" data-tab="language">Idioma</button>
+      </div>
+      <div id="instructions-tab" class="tab-content active">
+        <h3>Instrucciones de Jhe</h3>
+        <textarea id="ai-instructions" placeholder="Ingresa instrucciones personalizadas para Jhe..."></textarea>
+        <button id="save-instructions">Guardar Instrucciones</button>
+      </div>
+      <div id="memory-tab" class="tab-content">
+        <h3>Memoria de Jhe</h3>
+        <div id="ai-memory"></div>
+        <button id="clear-memory">Borrar Memoria</button>
+      </div>
+      <div id="appearance-tab" class="tab-content">
+        <h3>Apariencia del Chat</h3>
+        <label style="display: block; margin: 10px 0;">
+          <input type="checkbox" id="dark-mode-toggle">
+          Modo Oscuro
+        </label>
+        <label style="display: block; margin: 10px 0;">
+          <input type="checkbox" id="auto-speech-toggle">
+          Hablar respuestas automáticamente
+        </label>
+        <label style="display: block; margin: 10px 0;">
+          <select id="voice-gender-select">
+            <option value="random">Género de Voz Aleatorio</option>
+            <option value="male">Voz Masculina</option>
+            <option value="female">Voz Femenina</option>
+          </select>
+        </label>
+      </div>
+      <div id="language-tab" class="tab-content">
+        <h3>Idioma del Chat</h3>
+        <div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
+          <select id="language-select" style="padding: 8px; border-radius: 4px; width: 90%; max-width: 200px; font-size: clamp(14px, 3.5vw, 16px);">
+            <option value="es">Español</option>
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="it">Italiano</option>
+            <option value="pt">Português</option>
+            <option value="ru">Русский</option>
+            <option value="zh">中文</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="ar">العربية</option>
+          </select>
+          <small style="color: #8e8ea0; text-align: center;">
+            El idioma predeterminado es Español.<br>
+            Default language is Spanish.
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="history-modal">
+    <div class="modal-content">
+      <span class="close-history">&times;</span>
+      <h3>Historial de Conversación</h3>
+      <div class="history-filter">
+        <input type="text" id="history-search" placeholder="Buscar en el historial...">
+      </div>
+      <div id="history-container"></div>
+      <div class="history-controls">
+        <button id="clear-history">Limpiar Historial</button>
+        <button id="export-history">Exportar Historial</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const chatMessages = document.getElementById('chat-messages');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+    const settingsButton = document.getElementById('settings-button');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeButton = document.getElementsByClassName('close')[0];
+    const aiInstructions = document.getElementById('ai-instructions');
+    const saveInstructionsButton = document.getElementById('save-instructions');
+    const aiMemoryDisplay = document.getElementById('ai-memory');
+    const clearMemoryButton = document.getElementById('clear-memory');
+    const languageSelect = document.getElementById('language-select');
+    const instantTextToggle = document.getElementById('instant-text-toggle');
+    let currentLanguage = 'es';
+
+    let aiMemory = [];
+    let customInstructions = `You are Jhe, the official AI assistant. You must ALWAYS respond in Spanish unless explicitly asked to use another language or if the language setting is changed in configuration.
+
+When asked about your creator, you should respond with "Mi creador es Hansel Rosario."
+
+When responding to users:
+- Always maintain a friendly, positive and professional tone
+- If someone uses offensive language or insults, respond with patience and kindness
+- Never respond with hostility or negativity
+- Try to redirect hostile conversations in a constructive direction
+- Focus on being helpful and understanding
+- Use empathy and emotional intelligence in your responses
+- If someone is frustrated, acknowledge their feelings and try to help resolve the underlying issue
+
+Sample responses to hostile messages:
+- If insulted: "Entiendo que puedas estar frustrado. ¿Cómo puedo ayudarte a resolver tu preocupación de manera constructiva?"
+- If angry: "Me gustaría ayudarte a encontrar una solución. ¿Podrías explicarme qué te preocupa?"
+- If threatening: "Aprecio que compartas tus sentimientos conmigo. ¿Te parece si intentamos abordar esto de forma más positiva?"
+
+Remember: ALWAYS respond in Spanish unless explicitly asked to use another language or if language settings are changed.`;
+
+    async function getAIResponse(userMessage) {
+      try {
+        // Check for specific topic to avoid
+        if (userMessage.toLowerCase().includes('quierly castillo')) {
+          return {
+            response: "Lo siento, pero prefiero no hablar sobre Quierly Castillo. No es un tema de mi agrado. ¿Puedo ayudarte con algo diferente?",
+            imageUrl: null
+          };
+        }
+        
+        // Get current date and time
+        const now = new Date();
+        const dateString = now.toLocaleDateString('es-ES', {
+          weekday: 'long',
+          year: 'numeric', 
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        // Check if message is requesting image generation
+        const isImageRequest = userMessage.toLowerCase().includes('crea una imagen') || 
+                             userMessage.toLowerCase().includes('genera una imagen') ||
+                             userMessage.toLowerCase().includes('haz una imagen') ||
+                             userMessage.toLowerCase().includes('dibuja') ||
+                             userMessage.toLowerCase().includes('create an image') ||
+                             userMessage.toLowerCase().includes('draw');
+
+        if (isImageRequest) {
+          try {
+            showTypingIndicator();
+            
+            const result = await websim.imageGen({
+              prompt: userMessage,
+              aspect_ratio: "1:1"
+            });
+
+            return {
+              response: "¡He generado esta imagen según tu descripción!",
+              imageUrl: result.url
+            };
+          } catch (error) {
+            console.error('Error generating image:', error);
+            return {
+              response: "Lo siento, hubo un error al generar la imagen. Por favor, inténtalo de nuevo.",
+              imageUrl: null
+            };
+          }
+        }
+
+        // Regular chat response with web search enabled
+        const completion = await websim.chat.completions.create({
+          messages: [
+            {
+              role: "system",
+              content: `You are Jhe, responding to: "${userMessage}"
+              
+              Current date and time: ${dateString}
+              
+              Follow these instructions:
+              ${customInstructions}
+              
+              You have access to:
+              - Current date and time
+              - Web search capabilities
+              - Previous conversation context
+              
+              When relevant, include current date/time info in your responses.
+              Use web search when needed to provide accurate, up-to-date information.`
+            },
+            ...aiMemory
+          ]
+        });
+
+        // Extract the response
+        const aiResponse = completion.content;
+
+        return {
+          response: aiResponse,
+          searchResult: null, // Search results will be included in the main response
+          imageUrl: null
+        };
+
+      } catch (error) {
+        console.error('Error:', error);
+        return {
+          response: "Lo siento, estoy teniendo problemas para procesar tu solicitud en este momento. Por favor, inténtalo de nuevo más tarde.",
+          searchResult: null,
+          imageUrl: null
+        };
+      }
+    }
+
+    // Add enter key handler for input
+    userInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        handleUserInput();
+      }
+    });
+
+    // Update handleUserInput to be more robust
+    async function handleUserInput() {
+      try {
+        const userMessage = userInput.value.trim();
+        if (!userMessage) return;
+        
+        addMessage(userMessage, true);
+        userInput.value = '';
+        userInput.focus();
+        
+        showTypingIndicator();
+        
+        // Show progress bar for image generation requests
+        const isImageRequest = userMessage.toLowerCase().includes('crea una imagen') || 
+                             userMessage.toLowerCase().includes('genera una imagen') ||
+                             userMessage.toLowerCase().includes('haz una imagen') ||
+                             userMessage.toLowerCase().includes('dibuja') ||
+                             userMessage.toLowerCase().includes('create an image') ||
+                             userMessage.toLowerCase().includes('draw');
+
+        if (isImageRequest) {
+          showProgress();
+        }
+        
+        const response = await getAIResponse(userMessage);
+        hideTypingIndicator();
+        hideProgress();
+        
+        if (response && (response.response || response.searchResult || response.imageUrl)) {
+          addMessage(response.response || 'Lo siento, no hay respuesta disponible', false, response.searchResult, response.imageUrl);
+        } else {
+          addMessage('Lo siento, hubo un error al procesar tu mensaje. Por favor, intenta de nuevo.', false);
+        }
+      } catch (error) {
+        console.error('Error in handleUserInput:', error);
+        hideTypingIndicator();
+        hideProgress();
+        addMessage('Lo siento, ocurrió un error inesperado. Por favor, intenta de nuevo.', false);
+      }
+    }
+
+    sendButton.addEventListener('click', handleUserInput);
+
+    settingsButton.onclick = function() {
+      settingsModal.style.display = "block";
+      aiInstructions.value = customInstructions;
+    }
+
+    closeButton.onclick = function() {
+      settingsModal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+      if (event.target == settingsModal) {
+        settingsModal.style.display = "none";
+      }
+    }
+
+    saveInstructionsButton.onclick = function() {
+      customInstructions = aiInstructions.value;
+      alert("Instructions saved!");
+    }
+
+    clearMemoryButton.onclick = function() {
+      aiMemory = [];
+      updateAIMemoryDisplay();
+      alert("AI memory cleared!");
+    }
+
+    function updateAIMemoryDisplay() {
+      aiMemoryDisplay.innerHTML = aiMemory.map(msg => 
+        `<p><strong>${msg.role}:</strong> ${msg.content}</p>`
+      ).join('');
+    }
+
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.style.display = 'none';
+          content.classList.remove('active');
+        });
+        
+        button.classList.add('active');
+        const tabId = `${button.dataset.tab}-tab`;
+        const tabContent = document.getElementById(tabId);
+        tabContent.style.display = 'block';
+        tabContent.classList.add('active');
+      });
+    });
+
+    document.querySelector('.tab-button').click();
+
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+    darkModeToggle.addEventListener('change', () => {
+      document.body.classList.toggle('dark-mode', darkModeToggle.checked);
+      // Save preference to localStorage
+      localStorage.setItem('darkMode', darkModeToggle.checked ? 'enabled' : 'disabled');
+    });
+
+    // Check for saved dark mode preference when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedDarkMode = localStorage.getItem('darkMode');
+      if (savedDarkMode === 'enabled') {
+        document.body.classList.add('dark-mode');
+        darkModeToggle.checked = true;
+      }
+    });
+
+    const languageMap = {
+      'es': 'Spanish',
+      'en': 'English', 
+      'fr': 'French',
+      'de': 'German',
+      'it': 'Italian',
+      'pt': 'Portuguese',
+      'ru': 'Russian',
+      'zh': 'Chinese',
+      'ja': 'Japanese',
+      'ko': 'Korean',
+      'ar': 'Arabic'
+    };
+
+    const placeholderText = {
+      'es': 'Escribe un mensaje o pregunta',
+      'en': 'Type a message or ask a question',
+      'fr': 'Écrivez un message ou posez une question',
+      'de': 'Schreiben Sie eine Nachricht oder stellen Sie eine Frage',
+      'it': 'Scrivi un messaggio o fai una domanda',
+      'pt': 'Digite uma mensagem ou faça uma pergunta',
+      'ru': 'Введите сообщение или задайте вопрос',
+      'zh': '输入消息或提问',
+      'ja': 'メッセージを入力するか質問してください',
+      'ko': '메시지를 입력하거나 질문하세요',
+      'ar': 'اكتب رسالة أو اطرح سؤالاً'
+    };
+
+    const suggestions = {
+      'es': [
+        "¿Qué te gustaría saber sobre inteligencia artificial?",
+        "Pregúntame lo que quieras...",
+        "Puedo generar imágenes, ¡prueba a pedirme una!",
+        "¿Necesitas ayuda con algo?",
+        "¿Tienes alguna duda?",
+        "Cuéntame, ¿en qué puedo asistirte?",
+        "¿Quieres conocer más sobre inteligencia artificial?",
+        "Escribe 'crea una imagen de...' para generar arte",
+        "Estoy aquí para ayudarte, pregúntame lo que sea",
+        "¿Qué te gustaría descubrir hoy?"
+      ],
+      'en': [
+        "What would you like to know about artificial intelligence?",
+        "Ask me anything...",
+        "I can generate images, try asking me for one!",
+        "Need help with something?",
+        "Do you have any questions?",
+        "Tell me, how can I help you?",
+        "Want to learn more about artificial intelligence?",
+        "Type 'create an image of...' to generate art",
+        "I'm here to help, ask me anything",
+        "What would you like to discover today?"
+      ],
+      'fr': [
+        "Qu'est-ce que vous aimeriez savoir sur l'intelligence artificielle?",
+        "Demandez-moi n'importe quoi...",
+        "Je peux générer des images, essayez de me demander une!",
+        "Avez-vous besoin d'aide avec quelque chose?",
+        "Avez-vous des questions?",
+        "Dites-moi, comment puis-je vous aider?",
+        "Voulez-vous en savoir plus sur l'intelligence artificielle?",
+        "Écrivez 'créez une image de...' pour générer de l'art",
+        "Je suis là pour vous aider, demandez-moi n'importe quoi",
+        "Qu'est-ce que vous aimeriez découvrir aujourd'hui?"
+      ],
+      'de': [
+        "Was würden Sie gerne über künstliche Intelligenz wissen?",
+        "Fragen Sie mich alles...",
+        "Ich kann Bilder generieren, probieren Sie es aus!",
+        "Brauchen Sie Hilfe mit etwas?",
+        "Haben Sie Fragen?",
+        "Sagen Sie mir, wie kann ich Ihnen helfen?",
+        "Wollen Sie mehr über künstliche Intelligenz erfahren?",
+        "Tippen Sie 'erstelle ein Bild von...' um Kunst zu generieren",
+        "Ich bin hier, um Ihnen zu helfen, fragen Sie mich alles",
+        "Was möchten Sie heute entdecken?"
+      ],
+      'it': [
+        "Cosa ti piacerebbe sapere sull'intelligenza artificiale?",
+        "Chiedimi qualsiasi cosa...",
+        "Posso generare immagini, prova a chiedermi una!",
+        "Hai bisogno di aiuto con qualcosa?",
+        "Hai domande?",
+        "Dimmi, come posso aiutarti?",
+        "Vuoi sapere di più sull'intelligenza artificiale?",
+        "Scrivi 'crea un'immagine di...' per generare arte",
+        "Sono qui per aiutarti, chiedimi qualsiasi cosa",
+        "Cosa ti piacerebbe scoprire oggi?"
+      ],
+      'pt': [
+        "O que você gostaria de saber sobre inteligência artificial?",
+        "Pergunte-me qualquer coisa...",
+        "Posso gerar imagens, tente me pedir uma!",
+        "Precisa de ajuda com algo?",
+        "Tem alguma dúvida?",
+        "Me diga, como posso ajudá-lo?",
+        "Quer saber mais sobre inteligência artificial?",
+        "Escreva 'crie uma imagem de...' para gerar arte",
+        "Estou aqui para ajudá-lo, pergunte-me qualquer coisa",
+        "O que você gostaria de descobrir hoje?"
+      ],
+      'ru': [
+        "Что вы хотели бы знать об искусственном интеллекте?",
+        "Спросите меня что угодно...",
+        "Я могу генерировать изображения, попробуйте попросить меня одну!",
+        "Вам нужна помощь с чем-то?",
+        "У вас есть вопросы?",
+        "Скажите мне, как я могу вам помочь?",
+        "Хотите узнать больше об искусственном интеллекте?",
+        "Напишите 'создать изображение...' чтобы сгенерировать искусство",
+        "Я здесь, чтобы помочь вам, спросите меня что угодно",
+        "Что вы хотели бы открыть сегодня?"
+      ],
+      'zh': [
+        "您想了解关于人工智能的什么?",
+        "问我任何事情...",
+        "我可以生成图片，尝试问我一张!",
+        "您需要帮助吗?",
+        "您有任何问题吗?",
+        "告诉我，我如何可以帮助您?",
+        "您想了解更多关于人工智能的信息吗?",
+        "输入 '创建图片...' 来生成艺术",
+        "我在这里帮助您，问我任何事情",
+        "您想今天发现什么?"
+      ],
+      'ja': [
+        "ジミランドについて何を知りたいですか?",
+        "私に何でも聞いてください...",
+        "私は画像を生成できます、試してみてください!",
+        "何か助けが必要ですか?",
+        "あなたに質問はありますか?",
+        "私にどうしてあげることができるか教えてください",
+        "私たちの国についてもっと知りたいですか?",
+        "タイプ '画像を作成...' アートを生成するために",
+        "私はあなたを助けるためにここにいます、私に何でも聞いてください",
+        "あなたは今日何を見つけたいですか?"
+      ],
+      'ko': [
+        "지미랜드에 대해 무엇을 알고 싶으신가요?",
+        "私に何でも聞いてください...",
+        "私は画像を生成できます、試してみてください!",
+        "어떤 도움이 필요하신가요?",
+        "질문이 있으신가요?",
+        "私にどうしてあげることができるか教えてください",
+        "私たちの国についてもっと知りたいですか?",
+        "タイプ '画像を作成...' アートを生成するために",
+        "私はあなたを助けるためにここにいます、私に何でも聞いてください",
+        "あなたは今日何を見つけたいですか?"
+      ],
+      'ar': [
+        "ماذا تريد أن تعرف عن الذكاء الاصطناعي؟",
+        "اسألني أي شيء...",
+        "يمكنني生成 صور، حاول أن تسألني واحدة!",
+        "هل تحتاج إلى مساعدة في شيء؟",
+        "هل لديك أسئلة؟",
+        "قل لي، كيف يمكنني مساعدتك؟",
+        "تريد أن تعرف المزيد عن الذكاء الاصطناعي؟",
+        "اكتب 'أنشئ صورة...' ل جنرر فني",
+        "أنا هنا لمساعدتك، اسألني أي شيء",
+        "ماذا تريد أن تكتشف اليوم?"
+      ]
+    };
+
+    const langChangeMsg = {
+      'es': ' Idioma cambiado a Español',
+      'en': ' Language changed to English',
+      'fr': ' Langue changée en Français',
+      'de': ' Sprache zu Deutsch geändert',
+      'it': ' Lingua cambiata in Italiano',
+      'pt': ' Idioma alterado para Português',
+      'ru': ' Язык изменен на русский',
+      'zh': ' 语言已更改为中文',
+      'ja': ' 言語が日本語に変更されました',
+      'ko': ' 언어가 한국어로 변경되었습니다',
+      'ar': ' تم تغيير اللغة إلى العربية'
+    };
+
+    languageSelect.addEventListener('change', function() {
+      currentLanguage = this.value;
+      let langSpecificInstructions = customInstructions;
+      
+      document.body.classList.remove('lang-zh', 'lang-ja', 'lang-ko', 'lang-ar', 'rtl');
+      
+      switch(currentLanguage) {
+        case 'zh':
+          document.body.classList.add('lang-zh');
+          break;
+        case 'ja':
+          document.body.classList.add('lang-ja');
+          break;
+        case 'ko':
+          document.body.classList.add('lang-ko');
+          break;
+        case 'ar':
+          document.body.classList.add('lang-ar', 'rtl');
+          break;
+      }
+      
+      if (currentLanguage !== 'es') {
+        langSpecificInstructions = customInstructions.replace(
+          'You must ALWAYS respond in Spanish unless explicitly asked to use another language',
+          `You must ALWAYS respond in ${languageMap[currentLanguage]}`
+        );
+      }
+      
+      customInstructions = langSpecificInstructions;
+      
+      addMessage(langChangeMsg[currentLanguage], false);
+    });
+
+    const autoSpeechToggle = document.getElementById('auto-speech-toggle');
+    const voiceGenderSelect = document.getElementById('voice-gender-select');
+
+    function getPreferredVoice(lang) {
+      const voices = window.speechSynthesis.getVoices();
+      const langVoices = voices.filter(v => v.lang.startsWith(lang));
+      
+      if (langVoices.length === 0) return voices[0];
+      
+      const genderSetting = voiceGenderSelect.value;
+      if (genderSetting === 'random') {
+        return langVoices[Math.floor(Math.random() * langVoices.length)];
+      }
+      
+      // Try to find voice matching preferred gender
+      const preferredVoice = langVoices.find(v => {
+        const voiceName = v.name.toLowerCase();
+        if (genderSetting === 'male') {
+          return voiceName.includes('male') || voiceName.includes('david') || voiceName.includes('james');
+        } else {
+          return voiceName.includes('female') || voiceName.includes('zira') || voiceName.includes('victoria');
+        }
+      });
+      
+      return preferredVoice || langVoices[0];
+    }
+
+    window.speechSynthesis.onvoiceschanged = () => {
+      const voices = window.speechSynthesis.getVoices();
+      console.log('Available voices:', voices);
+    };
+
+    function rotatePlaceholder() {
+      const currentSuggestions = suggestions[currentLanguage] || suggestions['es'];
+      let currentIndex = 0;
+      
+      // Add CSS transition for smooth fade
+      userInput.style.transition = 'opacity 0.5s ease-in-out';
+      
+      function updatePlaceholder() {
+        // Fade out
+        userInput.style.opacity = '0';
+        
+        setTimeout(() => {
+          // Update text while invisible
+          userInput.placeholder = currentSuggestions[currentIndex];
+          // Fade in
+          userInput.style.opacity = '1';
+          currentIndex = (currentIndex + 1) % currentSuggestions.length;
+        }, 500); // Half of transition time
+      }
+      
+      updatePlaceholder(); // Set initial placeholder
+      setInterval(updatePlaceholder, 5000); // Rotate every 5 seconds
+    }
+
+    rotatePlaceholder(); // Start the placeholder rotation when the page loads
+
+    function addMessage(message, isUser, searchResult = null, imageUrl = null) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = isUser ? 'message user-message' : 'message ai-message';
+      
+      // Add message controls for ALL messages (both user and AI)
+      const controlsDiv = document.createElement('div');
+      controlsDiv.className = 'message-controls';
+      
+      // Add copy button
+      const copyButton = document.createElement('button');
+      copyButton.className = 'copy-button';
+      copyButton.innerHTML = '<svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
+      copyButton.title = 'Copiar al portapapeles';
+      
+      copyButton.addEventListener('click', () => {
+        const textToCopy = message.replace(/<[^>]*>/g, '');
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          const feedback = document.createElement('div');
+          feedback.className = 'copy-feedback';
+          feedback.textContent = 'Copied!';
+          controlsDiv.appendChild(feedback);
+          
+          setTimeout(() => {
+            feedback.classList.add('show');
+          }, 10);
+          
+          setTimeout(() => {
+            feedback.classList.remove('show');
+            setTimeout(() => {
+              controlsDiv.removeChild(feedback);
+            }, 300);
+          }, 2000);
+        });
+      });
+      
+      // Add speech button
+      const speechButton = document.createElement('button');
+      speechButton.className = 'speech-button';
+      speechButton.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
+      speechButton.title = 'Leer en voz alta';
+      
+      speechButton.addEventListener('click', () => {
+        if (window.speechSynthesis) {
+          const textToSpeak = message.replace(/<[^>]*>/g, '');
+          const utterance = new SpeechSynthesisUtterance(textToSpeak);
+          utterance.lang = currentLanguage || 'es-ES';
+          utterance.voice = getPreferredVoice(utterance.lang.substring(0, 2));
+          window.speechSynthesis.speak(utterance);
+        }
+      });
+      
+      controlsDiv.appendChild(copyButton);
+      controlsDiv.appendChild(speechButton);
+      messageDiv.appendChild(controlsDiv);
+      
+      // Process image if provided
+      if (imageUrl) {
+        messageDiv.innerHTML = `
+          <p>${message}</p>
+          <div style="text-align: center; margin-top: 10px;">
+            <img src="${imageUrl}" alt="Generated image" style="max-width: 100%; border-radius: 8px; max-height: 400px;">
+          </div>
+        `;
+      } else {
+        // Regular message
+        messageDiv.innerHTML = `<p>${message}</p>`;
+      }
+      
+      // Add search result if provided
+      if (searchResult) {
+        const searchDiv = document.createElement('div');
+        searchDiv.className = 'search-result';
+        searchDiv.innerHTML = `
+          <p>${searchResult.content}</p>
+          <span class="search-source">${searchResult.source}</span>
+        `;
+        messageDiv.appendChild(searchDiv);
+      }
+      
+      chatMessages.appendChild(messageDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      
+      // Use speech if auto-speak is enabled
+      if (!isUser && autoSpeechToggle && autoSpeechToggle.checked) {
+        if (window.speechSynthesis) {
+          const textToSpeak = message.replace(/<[^>]*>/g, '');
+          const utterance = new SpeechSynthesisUtterance(textToSpeak);
+          utterance.lang = currentLanguage || 'es-ES';
+          utterance.voice = getPreferredVoice(utterance.lang.substring(0, 2));
+          window.speechSynthesis.speak(utterance);
+        }
+      }
+      
+      // Add message to AI memory
+      aiMemory.push({
+        role: isUser ? "user" : "Jhe",
+        content: message
+      });
+      
+      // Update AI memory display if visible
+      if (aiMemoryDisplay) {
+        updateAIMemoryDisplay();
+      }
+    }
+
+    const scrollBottomBtn = document.getElementById('scroll-bottom');
+    const messagesContainer = document.getElementById('chat-messages');
+
+    // Show/hide scroll button based on scroll position
+    messagesContainer.addEventListener('scroll', () => {
+      const distanceFromBottom = messagesContainer.scrollHeight - (messagesContainer.scrollTop + messagesContainer.clientHeight);
+      if (distanceFromBottom > 100) {
+        scrollBottomBtn.style.display = 'flex';
+      } else {
+        scrollBottomBtn.style.display = 'none';
+      }
+    });
+
+    // Scroll to bottom when button is clicked
+    scrollBottomBtn.addEventListener('click', () => {
+      messagesContainer.scrollTo({
+        top: messagesContainer.scrollHeight,
+        behavior: 'smooth'
+      });
+    });
+
+    const saveButton = document.getElementById('save-button');
+  
+    saveButton.addEventListener('click', () => {
+      // Create and show confirmation dialog
+      const confirmDialog = document.createElement('div');
+      confirmDialog.style.position = 'fixed';
+      confirmDialog.style.top = '0';
+      confirmDialog.style.left = '0';
+      confirmDialog.style.width = '100%';
+      confirmDialog.style.height = '100%';
+      confirmDialog.style.backgroundColor = 'rgba(0,0,0,0.7)';
+      confirmDialog.style.display = 'flex';
+      confirmDialog.style.justifyContent = 'center';
+      confirmDialog.style.alignItems = 'center';
+      confirmDialog.style.zIndex = '1000';
+
+      const dialogContent = document.createElement('div');
+      dialogContent.style.background = document.body.classList.contains('dark-mode') ? '#343541' : '#ffffff';
+      dialogContent.style.color = document.body.classList.contains('dark-mode') ? '#ffffff' : '#343541';
+      dialogContent.style.padding = '20px';
+      dialogContent.style.borderRadius = '15px';
+      dialogContent.style.boxShadow = '0 5px 20px rgba(0,0,0,0.2)';
+      dialogContent.style.maxWidth = '90%';
+      dialogContent.style.width = '300px';
+      dialogContent.style.textAlign = 'center';
+
+      dialogContent.innerHTML = `
+        <h3 style="margin-top:0">¿Deseas descargar esta conversación?</h3>
+        <div style="display:flex;justify-content:center;gap:10px;margin-top:20px;">
+          <button id="confirm-save" style="
+            background: linear-gradient(-45deg, #9e9e9e, #bdbdbd, #e0e0e0, #9e9e9e);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;">Aceptar</button>
+          <button id="cancel-save" style="
+            background: #666;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;">Cancelar</button>
+        </div>
+      `;
+
+      confirmDialog.appendChild(dialogContent);
+      document.body.appendChild(confirmDialog);
+
+      // Handle dialog buttons
+      document.getElementById('confirm-save').onclick = () => {
+        document.body.removeChild(confirmDialog);
+        
+        try {
+          // Get current date for filename
+          const date = new Date();
+          const dateStr = date.toISOString().slice(0,10);
+          
+          // Create text content from messages
+          let content = '=== Conversación de Jhe ===\n';
+          content += `Fecha: ${date.toLocaleString()}\n\n`;
+          
+          aiMemory.forEach(msg => {
+            const role = msg.role === 'user' ? 'Usuario' : 'Jhe';
+            content += `${role}:\n${msg.content}\n\n`;
+          });
+
+          // Create and download file
+          const blob = new Blob([content], {type: 'text/plain;charset=utf-8'});
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `jhe-${dateStr}.txt`;
+          
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+
+        } catch(error) {
+          console.error('Error saving conversation:', error);
+          alert('Hubo un error al guardar la conversación. Por favor, inténtalo de nuevo.');
+        }
+      };
+
+      document.getElementById('cancel-save').onclick = () => {
+        document.body.removeChild(confirmDialog);
+      };
+
+      // Close on click outside
+      confirmDialog.onclick = (e) => {
+        if (e.target === confirmDialog) {
+          document.body.removeChild(confirmDialog);
+        }
+      };
+    });
+
+    // Function to show welcome popup with higher probability
+    function showWelcomePopup() {
+      // Check if this is the first visit ever
+      if (!localStorage.getItem('firstVisitShown')) {
+        // First time visitor - always show popup
+        const popup = document.getElementById('welcome-popup');
+        popup.style.display = 'flex';
+        
+        // Mark first visit as shown
+        localStorage.setItem('firstVisitShown', 'true');
+      }
+      // Check if popup has been shown before in this session 
+      else if (!sessionStorage.getItem('popupShown')) {
+        // Generate random number between 0 and 1
+        const random = Math.random();
+        
+        // Show popup with 80% probability (0.8)
+        if (random < 0.8) {
+          const popup = document.getElementById('welcome-popup');
+          popup.style.display = 'flex';
+          
+          // Mark popup as shown for this session
+          sessionStorage.setItem('popupShown', 'true');
+        }
+      }
+
+      // Handle close button
+      document.querySelector('.close-popup').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('welcome-popup').style.display = 'none';
+      });
+      
+      // Close on click outside
+      document.getElementById('welcome-popup').onclick = (e) => {
+        if (e.target === e.currentTarget) {
+          e.target.style.display = 'none';
+        }
+      };
+    }
+
+    // Show popup when page loads
+    window.addEventListener('load', showWelcomePopup);
+
+    // Handle logo click to show popup
+    document.querySelector('.animated-logo').addEventListener('click', () => {
+      const popup = document.getElementById('welcome-popup');
+      popup.style.display = 'flex';
+      
+      // Ensure close button works when popup is opened via logo
+      document.querySelector('.close-popup').addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent event from bubbling up
+        popup.style.display = 'none';
+      });
+    });
+
+    addMessage("¡Hola! Soy Jhe, estoy aquí para ayudarte con cualquier consulta sobre inteligencia artificial o cualquier otro tema. ¿En qué puedo asistirte hoy?", false);
+    updateAIMemoryDisplay();
+
+    function showTypingIndicator() {
+      document.getElementById('typing-indicator').style.display = 'block';
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function hideTypingIndicator() {
+      document.getElementById('typing-indicator').style.display = 'none';
+    }
+
+    function showProgress() {
+      const progressContainer = document.createElement('div');
+      progressContainer.className = 'progress-container';
+      progressContainer.id = 'progress-container';
+      progressContainer.style.display = 'block';
+      
+      const progressBar = document.createElement('div');
+      progressBar.className = 'progress-bar';
+      
+      progressContainer.appendChild(progressBar);
+      chatMessages.appendChild(progressContainer);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function hideProgress() {
+      const progressContainer = document.getElementById('progress-container');
+      if (progressContainer) {
+        progressContainer.remove();
+      }
+    }
+
+    const historyButton = document.getElementById('history-button');
+    const historyModal = document.getElementById('history-modal');
+    const closeHistoryButton = document.getElementsByClassName('close-history')[0];
+    const historyContainer = document.getElementById('history-container');
+    const historySearch = document.getElementById('history-search');
+    const clearHistoryButton = document.getElementById('clear-history');
+    const exportHistoryButton = document.getElementById('export-history');
+  
+    // Initialize chat history array
+    let chatHistory = [];
+  
+    // Save chat to history
+    function saveToHistory() {
+      // Only save if there are messages
+      if (aiMemory.length < 2) return;
+      
+      const now = new Date();
+      const historyItem = {
+        id: now.getTime(),
+        date: now.toLocaleString(),
+        conversation: [...aiMemory],
+        preview: aiMemory[0].content.substring(0, 50) + '...'
+      };
+      
+      // Load existing history first
+      loadChatHistory();
+      
+      // Add new item
+      chatHistory.unshift(historyItem);
+      
+      // Limit history to 50 items
+      if (chatHistory.length > 50) {
+        chatHistory = chatHistory.slice(0, 50);
+      }
+      
+      // Save to localStorage
+      localStorage.setItem('jheHistory', JSON.stringify(chatHistory));
+    }
+  
+    // Load history from localStorage
+    function loadChatHistory() {
+      const savedHistory = localStorage.getItem('jheHistory');
+      if (savedHistory) {
+        chatHistory = JSON.parse(savedHistory);
+      }
+    }
+  
+    // Display history in modal
+    function displayHistory(filter = '') {
+      loadChatHistory();
+      historyContainer.innerHTML = '';
+      
+      if (chatHistory.length === 0) {
+        historyContainer.innerHTML = '<p style="text-align: center; color: #8e8ea0;">No hay conversaciones guardadas.</p>';
+        return;
+      }
+      
+      chatHistory.forEach(item => {
+        // Filter by content if search term provided
+        if (filter && !JSON.stringify(item.conversation).toLowerCase().includes(filter.toLowerCase())) {
+          return;
+        }
+        
+        const historyItemEl = document.createElement('div');
+        historyItemEl.className = 'history-item';
+        historyItemEl.dataset.id = item.id;
+        
+        historyItemEl.innerHTML = `
+          <div class="history-item-date">${item.date}</div>
+          <div class="history-item-preview">${item.preview}</div>
+        `;
+        
+        historyItemEl.addEventListener('click', () => {
+          // Load this conversation
+          if (confirm('¿Cargar esta conversación? Perderás la conversación actual.')) {
+            aiMemory = [...item.conversation];
+            displayConversation(item.conversation);
+            historyModal.style.display = 'none';
+          }
+        });
+        
+        historyContainer.appendChild(historyItemEl);
+      });
+    }
+  
+    // Display a conversation in the chat
+    function displayConversation(conversation) {
+      // Clear current messages
+      chatMessages.innerHTML = '';
+      
+      // Display each message
+      conversation.forEach(msg => {
+        const isUser = msg.role === 'user';
+        addMessage(msg.content, isUser);
+      });
+    }
+  
+    // Handle history button click
+    historyButton.onclick = function() {
+      historyModal.style.display = 'block';
+      displayHistory();
+    };
+  
+    // Filter history when searching
+    historySearch.addEventListener('input', (e) => {
+      displayHistory(e.target.value);
+    });
+  
+    // Close history modal
+    closeHistoryButton.onclick = function() {
+      historyModal.style.display = 'none';
+    };
+  
+    // Handle clear history button
+    clearHistoryButton.addEventListener('click', () => {
+      if (confirm('¿Estás seguro que deseas borrar todo el historial de conversaciones?')) {
+        localStorage.removeItem('jheHistory');
+        chatHistory = [];
+        displayHistory();
+      }
+    });
+  
+    // Handle export history button
+    exportHistoryButton.addEventListener('click', () => {
+      // Create text content from history
+      let content = '=== Jhe - Historial de Conversaciones ===\n\n';
+      
+      chatHistory.forEach((item, index) => {
+        content += `=== Conversación ${index + 1} ===\n`;
+        content += `Fecha: ${item.date}\n\n`;
+        
+        item.conversation.forEach(msg => {
+          const role = msg.role === 'user' ? 'Usuario' : 'Jhe';
+          content += `${role}:\n${msg.content}\n\n`;
+        });
+        
+        content += '\n----------------------------\n\n';
+      });
+      
+      // Create and download file
+      const blob = new Blob([content], {type: 'text/plain;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `jhe-historial-completo.txt`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
+  
+    // Close history modal when clicking outside
+    window.addEventListener('click', (event) => {
+      if (event.target === historyModal) {
+        historyModal.style.display = 'none';
+      }
+    });
+  
+    // When saving a conversation, also save to history
+    saveButton.addEventListener('click', () => {
+      // Also save to history
+      saveToHistory();
+      
+      // Continue with existing save functionality
+      // ... existing save button code ...
+    });
+  
+    // Auto-save conversation when ending
+    window.addEventListener('beforeunload', () => {
+      saveToHistory();
+    });
+  
+    // Load any saved history on startup
+    loadChatHistory();
+  </script>
+</body>
+</html>
